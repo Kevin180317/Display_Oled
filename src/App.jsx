@@ -18,7 +18,7 @@ function App() {
 
       const resizedImageUrl = canvas.toDataURL();
       setPreview(resizedImageUrl);  // Guardar la URL de la imagen redimensionada para la vista previa
-
+       
       canvas.toBlob(function(blob) {
         const reader = new FileReader();
         reader.onloadend = function() {
