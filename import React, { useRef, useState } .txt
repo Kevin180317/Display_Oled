@@ -1,0 +1,61 @@
+import React, { useRef, useState } from "react";
+import { saveAs } from "file-saver";
+
+function App() {
+  const fileInput = useRef();
+  const [image, setImage] = useState(null);
+  const [preview, setPreview] = useState(null);
+
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    setPreview(URL.createObjectURL(file));
+
+    const img = new Image();
+    img.onload = function () {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      canvas.width = 240;
+      canvas.height = 240;
+      ctx.drawImage(this, 0, 0, 240, 240);
+
+      console.log(`Image width after resizing: ${canvas.width}`);
+      console.log(`Image height after resizing: ${canvas.height}`);
+
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const byteArray = new Uint8Array(imageData.data.buffer);
+
+      let hex = Array.from(byteArray).map(
+        (b) => "0x" + b.toString(16).padStart(2, "0")
+      );
+
+      let formattedHex = "";
+      while (hex.length) {
+        formattedHex += "  " + hex.splice(0, 16).join(", ") + ",\n";
+      }
+
+      const content = `static const byte image_array[] PROGMEM  = {\n${formattedHex}};`;
+      console.log(content);
+
+      const blob = new Blob([content], {
+        type: "text/plain;charset=utf-8",
+      });
+      saveAs(blob, "image.h");
+    };
+    img.src = URL.createObjectURL(file);
+  };
+
+  return (
+    <div className="h-screen flex flex-col items-center justify-center gap-4">
+      <div>Convertir Image to HEX</div>
+      <input
+        type="file"
+        accept="image/*"
+        ref={fileInput}
+        onChange={handleFileChange}
+      />
+      {image && <img src={preview} alt="Preview" className="mt-4" />}
+    </div>
+  );
+}
+
+export default App;
